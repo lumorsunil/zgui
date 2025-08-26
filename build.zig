@@ -94,10 +94,13 @@ pub fn build(b: *std.Build) void {
     };
 
     const imgui = if (options.shared) blk: {
-        const lib = b.addSharedLibrary(.{
+        const lib = b.addLibrary(.{
             .name = "imgui",
-            .target = target,
-            .optimize = optimize,
+            .linkage = .dynamic,
+            .root_module = b.createModule(.{
+                .target = target,
+                .optimize = optimize,
+            }),
         });
 
         if (target.result.os.tag == .windows) {
@@ -111,10 +114,12 @@ pub fn build(b: *std.Build) void {
         }
 
         break :blk lib;
-    } else b.addStaticLibrary(.{
+    } else b.addLibrary(.{
         .name = "imgui",
-        .target = target,
-        .optimize = optimize,
+        .root_module = b.createModule(.{
+            .target = target,
+            .optimize = optimize,
+        }),
     });
 
     b.installArtifact(imgui);
@@ -423,9 +428,11 @@ pub fn build(b: *std.Build) void {
 
     const tests = b.addTest(.{
         .name = "zgui-tests",
-        .root_source_file = b.path("src/gui.zig"),
-        .target = target,
-        .optimize = optimize,
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/gui.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
     });
     b.installArtifact(tests);
 
